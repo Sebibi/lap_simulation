@@ -5,6 +5,11 @@ use lap_simulation::tracks::circle::CircleTrack;
 use lap_simulation::plotting;
 
 fn main() {
+    let output_dir = std::env::var("OUTPUT_DIR").unwrap_or_else(|_| "results/images".to_string());
+    if let Err(e) = std::fs::create_dir_all(&output_dir) {
+        eprintln!("Error creating output directory {}: {}", output_dir, e);
+    }
+
     // Create a circular track with center radius of 50m and 10m track width
     let circle_track = CircleTrack::new(50.0, 10.0, 100);
     println!("Track created: {}\n", circle_track);
@@ -30,7 +35,8 @@ fn main() {
     println!("  {}\n", model);
 
     // Plot initial track and model
-    if let Err(e) = plotting::plot(&circle_track, &model, "initial_state.svg") {
+    let initial_path = format!("{}/initial_state.svg", output_dir);
+    if let Err(e) = plotting::plot(&circle_track, &model, &initial_path) {
         eprintln!("Error plotting: {}", e);
     }
     
@@ -42,7 +48,7 @@ fn main() {
         println!("Step {}: {} [in_track: {}]", i, state, in_track);
 
         if i % 5 == 0 {
-            let filename = format!("state_step_{:02}.svg", i);
+            let filename = format!("{}/state_step_{:02}.svg", output_dir, i);
             if let Err(e) = plotting::plot(&circle_track, &model, &filename) {
                 eprintln!("Error plotting: {}", e);
             }
@@ -53,7 +59,8 @@ fn main() {
     println!("  {}", model);
     
     // Plot the track and model together in a single plot
-    if let Err(e) = plotting::plot(&circle_track, &model, "final_state.svg") {
+    let final_path = format!("{}/final_state.svg", output_dir);
+    if let Err(e) = plotting::plot(&circle_track, &model, &final_path) {
         eprintln!("Error plotting: {}", e);
     }
 }

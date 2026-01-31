@@ -88,22 +88,26 @@ fn normalize_svg(bytes: &[u8]) -> String {
 fn main_produces_expected_svgs() {
     let temp_dir = unique_temp_dir();
     let exe = env!("CARGO_BIN_EXE_lap_simulation");
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let fixtures_dir = manifest_dir.join("tests").join("fixtures");
+    let output_dir = fixtures_dir.join("output");
+    fs::create_dir_all(&output_dir).expect("failed to create fixtures output dir");
 
     let status = Command::new(exe)
         .current_dir(&temp_dir)
+        .env("OUTPUT_DIR", &output_dir)
         .status()
         .expect("failed to run lap_simulation binary");
     assert!(status.success(), "lap_simulation binary failed");
 
-    let initial_path = temp_dir.join("initial_state.svg");
-    let final_path = temp_dir.join("final_state.svg");
+    let initial_path = output_dir.join("initial_state.svg");
+    let final_path = output_dir.join("final_state.svg");
 
     let initial_bytes = fs::read(&initial_path).expect("missing initial_state.svg");
     let final_bytes = fs::read(&final_path).expect("missing final_state.svg");
     assert!(!initial_bytes.is_empty(), "initial_state.svg is empty");
     assert!(!final_bytes.is_empty(), "final_state.svg is empty");
 
-    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let expected_initial = fs::read(
         manifest_dir
             .join("tests")
@@ -131,4 +135,5 @@ fn main_produces_expected_svgs() {
     );
 
     let _ = fs::remove_dir_all(&temp_dir);
+    let _ = fs::remove_dir_all(&output_dir);
 }
