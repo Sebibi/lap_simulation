@@ -104,10 +104,20 @@ fn main_produces_expected_svgs() {
     assert!(!final_bytes.is_empty(), "final_state.svg is empty");
 
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let expected_initial =
-        fs::read(manifest_dir.join("initial_state.svg")).expect("missing golden initial_state.svg");
-    let expected_final =
-        fs::read(manifest_dir.join("final_state.svg")).expect("missing golden final_state.svg");
+    let expected_initial = fs::read(
+        manifest_dir
+            .join("tests")
+            .join("fixtures")
+            .join("initial_state.svg"),
+    )
+    .expect("missing golden initial_state.svg");
+    let expected_final = fs::read(
+        manifest_dir
+            .join("tests")
+            .join("fixtures")
+            .join("final_state.svg"),
+    )
+    .expect("missing golden final_state.svg");
 
     assert_eq!(
         normalize_svg(&initial_bytes),
