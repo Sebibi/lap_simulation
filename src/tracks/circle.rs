@@ -1,10 +1,11 @@
-use super::base_track::Track;
+use super::base_track::{compute_center_line_yaw, Track};
 use std::f64::consts::PI;
 use std::fmt;
 
 /// Circular track defined by center line radius and track width
 pub struct CircleTrack {
     center_line: Vec<(f64, f64)>,
+    center_line_yaw: Vec<f64>,
     inside_border: Vec<(f64, f64)>,
     outside_border: Vec<(f64, f64)>,
     start_pos: (f64, f64, f64),
@@ -22,6 +23,7 @@ impl CircleTrack {
     pub fn new(center_radius: f64, track_width: f64, num_points: usize) -> Self {
         let mut track = Self {
             center_line: Vec::new(),
+            center_line_yaw: Vec::new(),
             inside_border: Vec::new(),
             outside_border: Vec::new(),
             start_pos: (center_radius, 0.0, PI / 2.0),
@@ -39,6 +41,7 @@ impl CircleTrack {
         let outside_radius = self.center_radius + self.track_width / 2.0;
         
         self.center_line.clear();
+        self.center_line_yaw.clear();
         self.inside_border.clear();
         self.outside_border.clear();
         
@@ -65,9 +68,11 @@ impl CircleTrack {
                 outside_radius * sin_a,
             ));
         }
-        
-        // Set start position at angle 0 (pointing upward/counter-clockwise with yaw = π/2)
-        self.start_pos = (self.center_radius, 0.0, PI / 2.0);
+
+        self.center_line_yaw = compute_center_line_yaw(&self.center_line);
+        if let (Some(&(x, y)), Some(&yaw)) = (self.center_line.first(), self.center_line_yaw.first()) {
+            self.start_pos = (x, y, yaw);
+        }
     }
 }
 
@@ -80,9 +85,13 @@ impl Track for CircleTrack {
         get_start_position: (f64, f64, f64),
     ) {
         self.center_line = center_line;
+        self.center_line_yaw = compute_center_line_yaw(&self.center_line);
         self.inside_border = inside_border;
         self.outside_border = outside_border;
         self.start_pos = get_start_position;
+        if let (Some(&(x, y)), Some(&yaw)) = (self.center_line.first(), self.center_line_yaw.first()) {
+            self.start_pos = (x, y, yaw);
+        }
     }
     
     fn is_in_track(&self, x: f64, y: f64) -> bool {
@@ -99,6 +108,10 @@ impl Track for CircleTrack {
     
     fn get_center_line(&self) -> &[(f64, f64)] {
         &self.center_line
+    }
+
+    fn get_center_line_yaw(&self) -> &[f64] {
+        &self.center_line_yaw
     }
     
     fn get_inside_boundary(&self) -> &[(f64, f64)] {

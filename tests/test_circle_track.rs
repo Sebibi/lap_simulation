@@ -15,10 +15,11 @@ fn test_circle_track_creation() {
 fn test_circle_track_get_start_position() {
     let track = CircleTrack::new(50.0, 10.0, 100);
     let start = track.get_start_position();
+    let yaw = track.get_center_line_yaw()[0];
     
     assert!((start.0 - 50.0).abs() < 1e-10);
     assert!((start.1 - 0.0).abs() < 1e-10);
-    assert!((start.2 - PI / 2.0).abs() < 1e-10);
+    assert!((start.2 - yaw).abs() < 1e-10);
 }
 
 #[test]
@@ -29,6 +30,18 @@ fn test_circle_track_center_line_first_point() {
     let first_point = center_line[0];
     assert!((first_point.0 - 50.0).abs() < 1e-10);
     assert!((first_point.1 - 0.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_circle_track_center_line_yaw() {
+    let track = CircleTrack::new(50.0, 10.0, 360);
+    let center_line = track.get_center_line();
+    let yaw = track.get_center_line_yaw();
+
+    assert_eq!(yaw.len(), center_line.len());
+
+    // At angle 0, tangent should point upward (~pi/2)
+    assert!((yaw[0] - PI / 2.0).abs() < 0.1);
 }
 
 #[test]
@@ -110,11 +123,13 @@ fn test_circle_track_with_different_sizes() {
     
     let start1 = track1.get_start_position();
     let start2 = track2.get_start_position();
+    let yaw1 = track1.get_center_line_yaw()[0];
+    let yaw2 = track2.get_center_line_yaw()[0];
     
     assert!((start1.0 - 30.0).abs() < 1e-10);
     assert!((start2.0 - 100.0).abs() < 1e-10);
-    assert!((start1.2 - PI / 2.0).abs() < 1e-10);
-    assert!((start2.2 - PI / 2.0).abs() < 1e-10);
+    assert!((start1.2 - yaw1).abs() < 1e-10);
+    assert!((start2.2 - yaw2).abs() < 1e-10);
 }
 
 #[test]

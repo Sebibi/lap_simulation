@@ -15,11 +15,12 @@ fn test_square_track_creation() {
 fn test_square_track_get_start_position() {
     let track = SquareTrack::new(100.0, 10.0, 25);
     let start = track.get_start_position();
+    let yaw = track.get_center_line_yaw()[0];
     
-    // Start position should be at (height/2, 0, 0) = (50, 0, 0)
+    // Start position should be at first center line point with matching yaw
     assert!((start.0 - 50.0).abs() < 1e-10);
-    assert!((start.1 - 0.0).abs() < 1e-10);
-    assert!((start.2 - 0.0).abs() < 1e-10);
+    assert!((start.1 - (-50.0)).abs() < 1e-10);
+    assert!((start.2 - yaw).abs() < 1e-10);
 }
 
 #[test]
@@ -31,6 +32,25 @@ fn test_square_track_center_line_first_point() {
     let first_point = center_line[0];
     assert!((first_point.0 - 50.0).abs() < 1e-10);
     assert!((first_point.1 - (-50.0)).abs() < 1e-10);
+}
+
+#[test]
+fn test_square_track_center_line_yaw() {
+    let points_per_side = 25;
+    let track = SquareTrack::new(100.0, 10.0, points_per_side);
+    let center_line = track.get_center_line();
+    let yaw = track.get_center_line_yaw();
+
+    assert_eq!(yaw.len(), center_line.len());
+
+    // Right side (moving up)
+    assert!((yaw[0] - std::f64::consts::FRAC_PI_2).abs() < 1e-10);
+    // Top side (moving left)
+    assert!((yaw[points_per_side] - std::f64::consts::PI).abs() < 1e-10);
+    // Left side (moving down)
+    assert!((yaw[2 * points_per_side] + std::f64::consts::FRAC_PI_2).abs() < 1e-10);
+    // Bottom side (moving right)
+    assert!(yaw[3 * points_per_side].abs() < 1e-10);
 }
 
 #[test]
@@ -115,12 +135,16 @@ fn test_square_track_with_different_sizes() {
     
     let start1 = track1.get_start_position();
     let start2 = track2.get_start_position();
+    let yaw1 = track1.get_center_line_yaw()[0];
+    let yaw2 = track2.get_center_line_yaw()[0];
     
-    // start should be (height/2, 0, 0)
+    // start should match first center line point and yaw
     assert!((start1.0 - 40.0).abs() < 1e-10);
+    assert!((start1.1 - (-40.0)).abs() < 1e-10);
     assert!((start2.0 - 100.0).abs() < 1e-10);
-    assert!((start1.2 - 0.0).abs() < 1e-10);
-    assert!((start2.2 - 0.0).abs() < 1e-10);
+    assert!((start2.1 - (-100.0)).abs() < 1e-10);
+    assert!((start1.2 - yaw1).abs() < 1e-10);
+    assert!((start2.2 - yaw2).abs() < 1e-10);
 }
 
 #[test]

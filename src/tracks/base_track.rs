@@ -36,6 +36,12 @@ pub trait Track {
     /// # Returns
     /// Reference to the list of (x, y) coordinates defining the center line
     fn get_center_line(&self) -> &[(f64, f64)];
+
+    /// Get the yaw orientation along the center line
+    ///
+    /// # Returns
+    /// Reference to the list of yaw angles (radians) corresponding to each center line point
+    fn get_center_line_yaw(&self) -> &[f64];
     
     /// Get the inside boundary coordinates
     /// 
@@ -60,4 +66,25 @@ pub trait Track {
     /// # Returns
     /// Tuple of (min_coord, max_coord) for the plot range
     fn get_plot_range(&self) -> (f64, f64);
+}
+
+/// Compute yaw angles for a closed center line using forward differences.
+pub fn compute_center_line_yaw(center_line: &[(f64, f64)]) -> Vec<f64> {
+    let n = center_line.len();
+    if n == 0 {
+        return Vec::new();
+    }
+    if n == 1 {
+        return vec![0.0];
+    }
+
+    let mut yaw = Vec::with_capacity(n);
+    for i in 0..n {
+        let (x0, y0) = center_line[i];
+        let (x1, y1) = center_line[(i + 1) % n];
+        let dx = x1 - x0;
+        let dy = y1 - y0;
+        yaw.push(dy.atan2(dx));
+    }
+    yaw
 }
