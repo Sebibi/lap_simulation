@@ -15,7 +15,7 @@ impl fmt::Display for PointMassState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Position: ({:.3}, {:.3}) m, Velocity: ({:.3}, {:.3}) m/s, Yaw: {:.3} rad",
+            "Pos: ({:.2}, {:.2}), Vel: ({:.2}, {:.2}), Yaw: {:.2}",
             self.x, self.y, self.vx, self.vy, self.yaw
         )
     }

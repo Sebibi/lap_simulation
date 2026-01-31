@@ -24,7 +24,7 @@ impl CircleTrack {
             center_line: Vec::new(),
             inside_border: Vec::new(),
             outside_border: Vec::new(),
-            start_pos: (center_radius, 0.0, 0.0),
+            start_pos: (center_radius, 0.0, PI / 2.0),
             center_radius,
             track_width,
         };
@@ -66,8 +66,8 @@ impl CircleTrack {
             ));
         }
         
-        // Set start position at angle 0 (pointing in positive X direction)
-        self.start_pos = (self.center_radius, 0.0, 0.0);
+        // Set start position at angle 0 (pointing upward/counter-clockwise with yaw = π/2)
+        self.start_pos = (self.center_radius, 0.0, PI / 2.0);
     }
 }
 

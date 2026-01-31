@@ -1,5 +1,6 @@
 use lap_simulation::tracks::base_track::Track;
 use lap_simulation::tracks::circle::CircleTrack;
+use std::f64::consts::PI;
 
 #[test]
 fn test_circle_track_creation() {
@@ -17,7 +18,7 @@ fn test_circle_track_get_start_position() {
     
     assert!((start.0 - 50.0).abs() < 1e-10);
     assert!((start.1 - 0.0).abs() < 1e-10);
-    assert!((start.2 - 0.0).abs() < 1e-10);
+    assert!((start.2 - PI / 2.0).abs() < 1e-10);
 }
 
 #[test]
@@ -112,8 +113,8 @@ fn test_circle_track_with_different_sizes() {
     
     assert!((start1.0 - 30.0).abs() < 1e-10);
     assert!((start2.0 - 100.0).abs() < 1e-10);
-    assert!((start1.2 - 0.0).abs() < 1e-10);
-    assert!((start2.2 - 0.0).abs() < 1e-10);
+    assert!((start1.2 - PI / 2.0).abs() < 1e-10);
+    assert!((start2.2 - PI / 2.0).abs() < 1e-10);
 }
 
 #[test]

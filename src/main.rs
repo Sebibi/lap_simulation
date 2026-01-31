@@ -20,8 +20,8 @@ fn main() {
     model.set_position(start_pos.0, start_pos.1, start_pos.2);
     println!("Model starting position: ({:.3}, {:.3}, {:.3})\n", start_pos.0, start_pos.1, start_pos.2);
     
-    // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 1 m/s^2 in y)
-    model.set_controls(2.0, 1.0);
+    // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 0 m/s^2 in y)
+    model.set_controls(2.0, 0.0);
     
     let dt = 0.1; // Time step in seconds
     
