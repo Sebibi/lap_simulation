@@ -21,7 +21,7 @@ fn main() {
     println!("Model starting position: ({:.3}, {:.3}, {:.3})\n", start_pos.0, start_pos.1, start_pos.2);
     
     // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 0 m/s^2 in y)
-    model.set_controls(2.0, 0.0);
+    model.set_controls(2.0, 1.0);
     
     let dt = 0.1; // Time step in seconds
     
@@ -34,12 +34,19 @@ fn main() {
         eprintln!("Error plotting: {}", e);
     }
     
-    // Step 100 times and print state after each step
-    for i in 1..=30 {
+    // Step 50 times and print state after each step
+    for i in 1..=50 {
         model.step(dt);
         let state = model.get_state();
         let in_track = circle_track.is_in_track(state.x, state.y);
         println!("Step {}: {} [in_track: {}]", i, state, in_track);
+
+        if i % 5 == 0 {
+            let filename = format!("state_step_{:02}.svg", i);
+            if let Err(e) = plotting::plot(&circle_track, &model, &filename) {
+                eprintln!("Error plotting: {}", e);
+            }
+        }
     }
     
     println!("\nFinal model state:");
@@ -50,4 +57,3 @@ fn main() {
         eprintln!("Error plotting: {}", e);
     }
 }
-
