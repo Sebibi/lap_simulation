@@ -9,11 +9,6 @@ fn main() {
     let circle_track = CircleTrack::new(50.0, 10.0, 100);
     println!("Track created: {}\n", circle_track);
     
-    // Plot the track using the plotting module
-    if let Err(e) = plotting::track::plot_track(&circle_track, "circle_track.svg") {
-        eprintln!("Error plotting circle track: {}", e);
-    }
-    
     // Create a point mass at origin with zero initial velocity
     let mut model = PointMass::new();
     
@@ -33,6 +28,11 @@ fn main() {
     println!("Simulating point mass motion on circle track:\n");
     println!("Initial state:");
     println!("  {}\n", model);
+
+    // Plot initial track and model
+    if let Err(e) = plotting::plot(&circle_track, &model, "initial_state.svg") {
+        eprintln!("Error plotting: {}", e);
+    }
     
     // Step 100 times and print state after each step
     for i in 1..=30 {
@@ -45,11 +45,9 @@ fn main() {
     println!("\nFinal model state:");
     println!("  {}", model);
     
-    // Plot the model at its final position using the plotting module
-    if let Err(e) = plotting::model::plot_model(&model, "model_position.svg") {
-        eprintln!("Error plotting model: {}", e);
-    } else {
-        println!("\nModel position plotted to model_position.svg");
+    // Plot the track and model together in a single plot
+    if let Err(e) = plotting::plot(&circle_track, &model, "final_state.svg") {
+        eprintln!("Error plotting: {}", e);
     }
 }
 
