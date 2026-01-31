@@ -1,9 +1,10 @@
-use super::base_track::Track;
+use super::base_track::{compute_center_line_yaw, Track};
 use std::fmt;
 
 /// Square track defined by height and track width
 pub struct SquareTrack {
     center_line: Vec<(f64, f64)>,
+    center_line_yaw: Vec<f64>,
     inside_border: Vec<(f64, f64)>,
     outside_border: Vec<(f64, f64)>,
     start_pos: (f64, f64, f64),
@@ -21,6 +22,7 @@ impl SquareTrack {
     pub fn new(height: f64, track_width: f64, points_per_side: usize) -> Self {
         let mut track = Self {
             center_line: Vec::new(),
+            center_line_yaw: Vec::new(),
             inside_border: Vec::new(),
             outside_border: Vec::new(),
             start_pos: (height / 2.0, 0.0, 0.0),
@@ -39,6 +41,7 @@ impl SquareTrack {
         let half_outside = half_center + self.track_width / 2.0;
         
         self.center_line.clear();
+        self.center_line_yaw.clear();
         self.inside_border.clear();
         self.outside_border.clear();
         
@@ -82,9 +85,11 @@ impl SquareTrack {
             self.inside_border.push((x, -half_inside));
             self.outside_border.push((x, -half_outside));
         }
-        
-        // Set start position at the middle of the right side (pointing in positive X direction)
-        self.start_pos = (half_center, 0.0, 0.0);
+
+        self.center_line_yaw = compute_center_line_yaw(&self.center_line);
+        if let (Some(&(x, y)), Some(&yaw)) = (self.center_line.first(), self.center_line_yaw.first()) {
+            self.start_pos = (x, y, yaw);
+        }
     }
 }
 
@@ -97,9 +102,13 @@ impl Track for SquareTrack {
         get_start_position: (f64, f64, f64),
     ) {
         self.center_line = center_line;
+        self.center_line_yaw = compute_center_line_yaw(&self.center_line);
         self.inside_border = inside_border;
         self.outside_border = outside_border;
         self.start_pos = get_start_position;
+        if let (Some(&(x, y)), Some(&yaw)) = (self.center_line.first(), self.center_line_yaw.first()) {
+            self.start_pos = (x, y, yaw);
+        }
     }
     
     fn is_in_track(&self, x: f64, y: f64) -> bool {
@@ -121,6 +130,10 @@ impl Track for SquareTrack {
     
     fn get_center_line(&self) -> &[(f64, f64)] {
         &self.center_line
+    }
+
+    fn get_center_line_yaw(&self) -> &[f64] {
+        &self.center_line_yaw
     }
     
     fn get_inside_boundary(&self) -> &[(f64, f64)] {
