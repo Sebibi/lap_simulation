@@ -6,7 +6,7 @@ pub struct SquareTrack {
     center_line: Vec<(f64, f64)>,
     inside_border: Vec<(f64, f64)>,
     outside_border: Vec<(f64, f64)>,
-    start_pos: (f64, f64),
+    start_pos: (f64, f64, f64),
     height: f64,
     track_width: f64,
 }
@@ -23,7 +23,7 @@ impl SquareTrack {
             center_line: Vec::new(),
             inside_border: Vec::new(),
             outside_border: Vec::new(),
-            start_pos: (height / 2.0, 0.0),
+            start_pos: (height / 2.0, 0.0, 0.0),
             height,
             track_width,
         };
@@ -83,8 +83,8 @@ impl SquareTrack {
             self.outside_border.push((x, -half_outside));
         }
         
-        // Set start position at the middle of the right side
-        self.start_pos = (half_center, 0.0);
+        // Set start position at the middle of the right side (pointing in positive X direction)
+        self.start_pos = (half_center, 0.0, 0.0);
     }
 }
 
@@ -94,12 +94,12 @@ impl Track for SquareTrack {
         center_line: Vec<(f64, f64)>,
         inside_border: Vec<(f64, f64)>,
         outside_border: Vec<(f64, f64)>,
-        start_position: (f64, f64),
+        get_start_position: (f64, f64, f64),
     ) {
         self.center_line = center_line;
         self.inside_border = inside_border;
         self.outside_border = outside_border;
-        self.start_pos = start_position;
+        self.start_pos = get_start_position;
     }
     
     fn is_in_track(&self, x: f64, y: f64) -> bool {
@@ -115,7 +115,7 @@ impl Track for SquareTrack {
         in_outer && out_inner
     }
     
-    fn start_position(&self) -> (f64, f64) {
+    fn get_start_position(&self) -> (f64, f64, f64) {
         self.start_pos
     }
     

@@ -7,7 +7,7 @@ pub struct CircleTrack {
     center_line: Vec<(f64, f64)>,
     inside_border: Vec<(f64, f64)>,
     outside_border: Vec<(f64, f64)>,
-    start_pos: (f64, f64),
+    start_pos: (f64, f64, f64),
     center_radius: f64,
     track_width: f64,
 }
@@ -24,7 +24,7 @@ impl CircleTrack {
             center_line: Vec::new(),
             inside_border: Vec::new(),
             outside_border: Vec::new(),
-            start_pos: (center_radius, 0.0),
+            start_pos: (center_radius, 0.0, 0.0),
             center_radius,
             track_width,
         };
@@ -66,8 +66,8 @@ impl CircleTrack {
             ));
         }
         
-        // Set start position at angle 0
-        self.start_pos = (self.center_radius, 0.0);
+        // Set start position at angle 0 (pointing in positive X direction)
+        self.start_pos = (self.center_radius, 0.0, 0.0);
     }
 }
 
@@ -77,12 +77,12 @@ impl Track for CircleTrack {
         center_line: Vec<(f64, f64)>,
         inside_border: Vec<(f64, f64)>,
         outside_border: Vec<(f64, f64)>,
-        start_position: (f64, f64),
+        get_start_position: (f64, f64, f64),
     ) {
         self.center_line = center_line;
         self.inside_border = inside_border;
         self.outside_border = outside_border;
-        self.start_pos = start_position;
+        self.start_pos = get_start_position;
     }
     
     fn is_in_track(&self, x: f64, y: f64) -> bool {
@@ -93,7 +93,7 @@ impl Track for CircleTrack {
         distance_from_center >= inside_radius && distance_from_center <= outside_radius
     }
     
-    fn start_position(&self) -> (f64, f64) {
+    fn get_start_position(&self) -> (f64, f64, f64) {
         self.start_pos
     }
     

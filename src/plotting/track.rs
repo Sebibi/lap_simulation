@@ -61,8 +61,9 @@ pub fn plot_track(track: &dyn Track, filename: &str) -> Result<(), Box<dyn Error
     .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLACK));
     
     // Plot start position
+    let start_pos = track.get_start_position();
     chart.draw_series(std::iter::once(Circle::new(
-        track.start_position(),
+        (start_pos.0, start_pos.1),
         5,
         BLACK.filled(),
     )))?

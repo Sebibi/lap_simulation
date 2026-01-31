@@ -12,13 +12,14 @@ fn test_square_track_creation() {
 }
 
 #[test]
-fn test_square_track_start_position() {
+fn test_square_track_get_start_position() {
     let track = SquareTrack::new(100.0, 10.0, 25);
-    let start = track.start_position();
+    let start = track.get_start_position();
     
-    // Start position should be at (height/2, 0) = (50, 0)
+    // Start position should be at (height/2, 0, 0) = (50, 0, 0)
     assert!((start.0 - 50.0).abs() < 1e-10);
     assert!((start.1 - 0.0).abs() < 1e-10);
+    assert!((start.2 - 0.0).abs() < 1e-10);
 }
 
 #[test]
@@ -112,12 +113,14 @@ fn test_square_track_with_different_sizes() {
     let track1 = SquareTrack::new(80.0, 8.0, 20);
     let track2 = SquareTrack::new(200.0, 20.0, 50);
     
-    let start1 = track1.start_position();
-    let start2 = track2.start_position();
+    let start1 = track1.get_start_position();
+    let start2 = track2.get_start_position();
     
-    // start should be (height/2, 0)
+    // start should be (height/2, 0, 0)
     assert!((start1.0 - 40.0).abs() < 1e-10);
     assert!((start2.0 - 100.0).abs() < 1e-10);
+    assert!((start1.2 - 0.0).abs() < 1e-10);
+    assert!((start2.2 - 0.0).abs() < 1e-10);
 }
 
 #[test]

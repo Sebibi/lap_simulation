@@ -11,12 +11,13 @@ fn test_circle_track_creation() {
 }
 
 #[test]
-fn test_circle_track_start_position() {
+fn test_circle_track_get_start_position() {
     let track = CircleTrack::new(50.0, 10.0, 100);
-    let start = track.start_position();
+    let start = track.get_start_position();
     
     assert!((start.0 - 50.0).abs() < 1e-10);
     assert!((start.1 - 0.0).abs() < 1e-10);
+    assert!((start.2 - 0.0).abs() < 1e-10);
 }
 
 #[test]
@@ -106,11 +107,13 @@ fn test_circle_track_with_different_sizes() {
     let track1 = CircleTrack::new(30.0, 5.0, 50);
     let track2 = CircleTrack::new(100.0, 20.0, 200);
     
-    let start1 = track1.start_position();
-    let start2 = track2.start_position();
+    let start1 = track1.get_start_position();
+    let start2 = track2.get_start_position();
     
     assert!((start1.0 - 30.0).abs() < 1e-10);
     assert!((start2.0 - 100.0).abs() < 1e-10);
+    assert!((start1.2 - 0.0).abs() < 1e-10);
+    assert!((start2.2 - 0.0).abs() < 1e-10);
 }
 
 #[test]

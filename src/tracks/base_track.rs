@@ -6,13 +6,13 @@ pub trait Track {
     /// * `center_line` - List of (x, y) coordinates defining the center line
     /// * `inside_border` - List of (x, y) coordinates defining the inside boundary
     /// * `outside_border` - List of (x, y) coordinates defining the outside boundary
-    /// * `start_position` - (x, y) coordinates of the starting position
+    /// * `get_start_position` - (x, y, yaw) coordinates of the starting position and orientation
     fn init(
         &mut self,
         center_line: Vec<(f64, f64)>,
         inside_border: Vec<(f64, f64)>,
         outside_border: Vec<(f64, f64)>,
-        start_position: (f64, f64),
+        get_start_position: (f64, f64, f64),
     );
     
     /// Check if a given position is within the track boundaries
@@ -25,11 +25,11 @@ pub trait Track {
     /// `true` if the position is inside the track, `false` otherwise
     fn is_in_track(&self, x: f64, y: f64) -> bool;
     
-    /// Get the starting position on the track
+    /// Get the starting position and orientation on the track
     /// 
     /// # Returns
-    /// Tuple of (x, y) coordinates for the start position
-    fn start_position(&self) -> (f64, f64);
+    /// Tuple of (x, y, yaw) coordinates for the start position and orientation in radians
+    fn get_start_position(&self) -> (f64, f64, f64);
     
     /// Get the center line coordinates
     /// 

@@ -16,9 +16,9 @@ fn main() {
     model.init();
     
     // Set the model to the track's starting position
-    let start_pos = circle_track.start_position();
-    model.set_position(start_pos.0, start_pos.1, 0.0);
-    println!("Model starting position: ({:.3}, {:.3})\n", start_pos.0, start_pos.1);
+    let start_pos = circle_track.get_start_position();
+    model.set_position(start_pos.0, start_pos.1, start_pos.2);
+    println!("Model starting position: ({:.3}, {:.3}, {:.3})\n", start_pos.0, start_pos.1, start_pos.2);
     
     // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 1 m/s^2 in y)
     model.set_controls(2.0, 1.0);
