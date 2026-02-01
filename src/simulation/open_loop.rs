@@ -115,13 +115,21 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
 
         if let Some(initial_svg) = initial_path {
             let mut frames: Vec<String> = Vec::with_capacity(step_svgs.len() + 2);
-            frames.push(initial_svg);
+            frames.push(initial_svg.clone());
             frames.extend(step_svgs.iter().cloned());
             frames.push(format!("{}/{}", output_dir, final_svg));
             let video_path = format!("{}/open_loop.mp4", output_dir);
             if let Err(e) = plotting::create_video_from_svgs(&frames, &video_path, fps) {
                 eprintln!("Error creating video: {}", e);
             } else {
+                if let Err(e) = plotting::write_open_loop_html_preview(
+                    output_dir,
+                    "open_loop.mp4",
+                    Some(initial_svg.as_str()),
+                    Some(final_svg),
+                ) {
+                    eprintln!("Error creating HTML preview: {}", e);
+                }
                 for step_svg in &step_svgs {
                     if let Err(e) = fs::remove_file(step_svg) {
                         eprintln!("Error deleting {}: {}", step_svg, e);

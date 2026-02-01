@@ -18,6 +18,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run open-loop simulation
         run: cargo run --bin lap_simulation
+      - name: Build preview assets
+        run: |
+          ffmpeg -y -i results/images/initial_state.svg results/images/initial_state.png
+          ffmpeg -y -i results/images/final_state.svg results/images/final_state.png
+          ffmpeg -y -i results/images/open_loop.mp4 -vf "fps=8,scale=640:-1:flags=lanczos" -t 6 results/images/open_loop_preview.gif
+      - name: Add preview to workflow summary
+        run: |
+          {
+            echo "## Open-loop preview"
+            echo ""
+            echo "![Initial state](results/images/initial_state.png)"
+            echo "![Final state](results/images/final_state.png)"
+            echo "![Open-loop animation](results/images/open_loop_preview.gif)"
+            echo ""
+            echo "HTML report included in artifacts: \`results/images/open_loop_preview.html\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload open-loop artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -26,3 +42,7 @@ jobs:
             results/images/initial_state.svg
             results/images/final_state.svg
             results/images/open_loop.mp4
+            results/images/open_loop_preview.html
+            results/images/initial_state.png
+            results/images/final_state.png
+            results/images/open_loop_preview.gif
