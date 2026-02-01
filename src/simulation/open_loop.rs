@@ -33,10 +33,6 @@ pub fn open_loop(output_dir: &str, fps: u32) {
     let initial_svg = "initial_state.svg";
     let final_svg = "final_state.svg";
 
-    // Plot initial track and model
-    if let Err(e) = plotting::plot(&circle_track, &model, initial_svg) {
-        eprintln!("Error plotting: {}", e);
-    }
     let output_dir_ready = fs::create_dir_all(output_dir).is_ok();
     let mut step_svgs: Vec<String> = Vec::new();
     let mut initial_path: Option<String> = None;
@@ -69,10 +65,6 @@ pub fn open_loop(output_dir: &str, fps: u32) {
     println!("\nFinal model state:");
     println!("  {}", model);
     
-    // Plot the track and model together in a single plot
-    if let Err(e) = plotting::plot(&circle_track, &model, final_svg) {
-        eprintln!("Error plotting: {}", e);
-    }
     if output_dir_ready {
         if let Err(e) = plotting::plot(&circle_track, &model, &format!("{}/{}", output_dir, final_svg)) {
             eprintln!("Error plotting: {}", e);
