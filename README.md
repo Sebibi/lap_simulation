@@ -66,6 +66,8 @@ Run the simulation:
 cargo run --bin lap_simulation
 ```
 
+Tip: Use `cargo run --bin lap_simulation -- --help` to see available CLI options.
+
 Run tests:
 ```bash
 cargo test
