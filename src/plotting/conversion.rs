@@ -35,7 +35,32 @@ pub fn write_open_loop_html_preview<P: AsRef<Path>>(
         escape_html(video_filename)
     ));
 
-    let _ = (initial_svg, final_svg);
+    let initial_ref = initial_svg.and_then(|path| normalize_media_path(output_dir, path));
+    let final_ref = final_svg.and_then(|path| normalize_media_path(output_dir, path));
+
+    if initial_ref.is_some() || final_ref.is_some() {
+        html.push_str("  <h2>Frame previews</h2>\n");
+        html.push_str("  <div class=\"media\">\n");
+        if let Some(path) = initial_ref {
+            html.push_str("    <figure>\n");
+            html.push_str("      <figcaption>Initial state</figcaption>\n");
+            html.push_str(&format!(
+                "      <img alt=\"Initial state\" src=\"{}\">\n",
+                escape_html(&path)
+            ));
+            html.push_str("    </figure>\n");
+        }
+        if let Some(path) = final_ref {
+            html.push_str("    <figure>\n");
+            html.push_str("      <figcaption>Final state</figcaption>\n");
+            html.push_str(&format!(
+                "      <img alt=\"Final state\" src=\"{}\">\n",
+                escape_html(&path)
+            ));
+            html.push_str("    </figure>\n");
+        }
+        html.push_str("  </div>\n");
+    }
 
     html.push_str("</body>\n</html>\n");
 
@@ -58,6 +83,27 @@ fn escape_html(value: &str) -> String {
     escaped
 }
 
+fn normalize_media_path(output_dir: &Path, path: &str) -> Option<String> {
+    let candidate = Path::new(path);
+    if candidate.is_absolute() {
+        if candidate.exists() {
+            candidate
+                .file_name()
+                .and_then(|name| name.to_str())
+                .map(|name| name.to_string())
+        } else {
+            None
+        }
+    } else {
+        let resolved = output_dir.join(candidate);
+        if resolved.exists() {
+            Some(path.to_string())
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::write_open_loop_html_preview;
@@ -68,11 +114,20 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
         let output_dir = temp_dir.path();
         fs::write(output_dir.join("open_loop.mp4"), b"video").expect("write video");
-        let html_path = write_open_loop_html_preview(output_dir, "open_loop.mp4", None, None)
+        fs::write(output_dir.join("initial_state.svg"), b"initial").expect("write initial svg");
+        fs::write(output_dir.join("final_state.svg"), b"final").expect("write final svg");
+        let html_path = write_open_loop_html_preview(
+            output_dir,
+            "open_loop.mp4",
+            Some("initial_state.svg"),
+            Some("final_state.svg"),
+        )
         .expect("write html preview");
 
         let html = fs::read_to_string(html_path).expect("read html preview");
         assert!(html.contains("open_loop.mp4"));
+        assert!(html.contains("initial_state.svg"));
+        assert!(html.contains("final_state.svg"));
         assert!(html.contains("Open-loop simulation preview"));
     }
 }
