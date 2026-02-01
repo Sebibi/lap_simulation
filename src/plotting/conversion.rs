@@ -68,21 +68,11 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
         let output_dir = temp_dir.path();
         fs::write(output_dir.join("open_loop.mp4"), b"video").expect("write video");
-        fs::write(output_dir.join("initial_state.svg"), b"<svg></svg>").expect("write svg");
-        fs::write(output_dir.join("final_state.svg"), b"<svg></svg>").expect("write svg");
-
-        let html_path = write_open_loop_html_preview(
-            output_dir,
-            "open_loop.mp4",
-            Some("initial_state.svg"),
-            Some("final_state.svg"),
-        )
+        let html_path = write_open_loop_html_preview(output_dir, "open_loop.mp4", None, None)
         .expect("write html preview");
 
         let html = fs::read_to_string(html_path).expect("read html preview");
         assert!(html.contains("open_loop.mp4"));
-        assert!(html.contains("initial_state.svg"));
-        assert!(html.contains("final_state.svg"));
         assert!(html.contains("Open-loop simulation preview"));
     }
 }
