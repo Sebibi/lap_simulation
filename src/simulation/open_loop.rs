@@ -29,9 +29,9 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
     
     // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 0 m/s^2 in y)
     model.set_controls(2.0, 0.0);
-    
+
     let fps = 10u32;
-    let frame_interval = 1.0f64 / fps as f64;
+    let frame_times = scheduled_frame_times(duration, fps);
     
     println!("Simulating point mass motion on circle track:\n");
     println!("Initial state:");
@@ -53,8 +53,8 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
     }
     
     let mut current_time = 0.0f64;
-    let mut next_frame_time = frame_interval;
     let mut frame_index = 1usize;
+    let mut next_frame_index = 0usize;
     let steps = (duration / dt).floor() as usize;
 
     // Step through the simulation and capture frames at the target fps.
@@ -66,7 +66,9 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
         println!("Step {}: {} [in_track: {}]", i, state, in_track);
 
         if output_dir_ready {
-            while current_time + 1e-9 >= next_frame_time && next_frame_time + 1e-9 < duration {
+            while next_frame_index < frame_times.len()
+                && current_time + 1e-9 >= frame_times[next_frame_index]
+            {
                 let step_svg = format!("step_{:03}.svg", frame_index);
                 let step_path = format!("{}/{}", output_dir, step_svg);
                 step_svgs.push(step_path.clone());
@@ -74,7 +76,7 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
                     eprintln!("Error plotting: {}", e);
                 }
                 frame_index += 1;
-                next_frame_time += frame_interval;
+                next_frame_index += 1;
             }
         }
     }
@@ -88,7 +90,9 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
         println!("Step {}: {} [in_track: {}]", steps + 1, state, in_track);
 
         if output_dir_ready {
-            while current_time + 1e-9 >= next_frame_time && next_frame_time + 1e-9 < duration {
+            while next_frame_index < frame_times.len()
+                && current_time + 1e-9 >= frame_times[next_frame_index]
+            {
                 let step_svg = format!("step_{:03}.svg", frame_index);
                 let step_path = format!("{}/{}", output_dir, step_svg);
                 step_svgs.push(step_path.clone());
@@ -96,7 +100,7 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
                     eprintln!("Error plotting: {}", e);
                 }
                 frame_index += 1;
-                next_frame_time += frame_interval;
+                next_frame_index += 1;
             }
         }
     }
@@ -125,5 +129,53 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
                 }
             }
         }
+    }
+}
+
+fn scheduled_frame_times(duration: f64, fps: u32) -> Vec<f64> {
+    if duration <= 0.0 || fps == 0 {
+        return Vec::new();
+    }
+
+    let frame_interval = 1.0f64 / fps as f64;
+    let mut times = Vec::new();
+    let mut t = frame_interval;
+    while t + 1e-9 < duration {
+        times.push(t);
+        t += frame_interval;
+    }
+
+    times
+}
+
+#[cfg(test)]
+mod tests {
+    use super::scheduled_frame_times;
+
+    #[test]
+    fn test_scheduled_frame_times_zero_duration() {
+        let times = scheduled_frame_times(0.0, 10);
+        assert!(times.is_empty());
+    }
+
+    #[test]
+    fn test_scheduled_frame_times_short_duration() {
+        let times = scheduled_frame_times(0.05, 10);
+        assert!(times.is_empty());
+    }
+
+    #[test]
+    fn test_scheduled_frame_times_exact_second() {
+        let times = scheduled_frame_times(1.0, 10);
+        assert_eq!(times.len(), 9);
+        assert!((times[0] - 0.1).abs() < 1e-9);
+        assert!((times[times.len() - 1] - 0.9).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_scheduled_frame_times_after_second() {
+        let times = scheduled_frame_times(1.01, 10);
+        assert_eq!(times.len(), 10);
+        assert!((times[9] - 1.0).abs() < 1e-9);
     }
 }

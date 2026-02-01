@@ -5,3 +5,9 @@ edition = "2024"
 
 [dependencies]
 plotters = { version = "0.3", default-features = false, features = ["svg_backend", "line_series"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[features]
+ffmpeg = []

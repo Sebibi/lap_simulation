@@ -87,3 +87,28 @@ pub fn plot_model<M: Model + ?Sized>(model: &M, path: &str) -> Result<(), Box<dy
     root.present()?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::plot_model;
+    use crate::models::point_mass::PointMass;
+
+    #[test]
+    fn test_point_mass_plot_model() {
+        use std::f64::consts::PI;
+
+        // Create a model at position (10, 20) with yaw = PI/4 (45 degrees)
+        let mut model = PointMass::with_initial_state(10.0, 20.0, 0.0, 0.0, PI / 4.0);
+        model.set_size(5.0, 2.0);
+
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let filename = temp_dir.path().join("test_model_plot.svg");
+
+        // Plot the model
+        let result = plot_model(&model, filename.to_str().expect("temp path not utf-8"));
+        assert!(result.is_ok(), "Failed to plot model: {:?}", result.err());
+
+        // Verify file was created
+        assert!(filename.exists(), "Plot file was not created");
+    }
+}

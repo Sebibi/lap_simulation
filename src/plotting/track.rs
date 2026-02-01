@@ -80,3 +80,37 @@ pub fn plot_track(track: &dyn Track, filename: &str) -> Result<(), Box<dyn Error
     println!("{} plot saved to {}", track.get_track_name(), filename);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::plot_track;
+    use crate::tracks::circle::CircleTrack;
+    use crate::tracks::square::SquareTrack;
+    use std::fs;
+
+    #[test]
+    fn test_circle_track_plot() {
+        let track = CircleTrack::new(50.0, 10.0, 100);
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let filename = temp_dir.path().join("test_circle_track.svg");
+
+        let result = plot_track(&track, filename.to_str().expect("temp path not utf-8"));
+        assert!(result.is_ok());
+
+        // Verify file was created
+        assert!(fs::metadata(&filename).is_ok());
+    }
+
+    #[test]
+    fn test_square_track_plot() {
+        let track = SquareTrack::new(100.0, 10.0, 25);
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let filename = temp_dir.path().join("test_square_track.svg");
+
+        let result = plot_track(&track, filename.to_str().expect("temp path not utf-8"));
+        assert!(result.is_ok());
+
+        // Verify file was created
+        assert!(fs::metadata(&filename).is_ok());
+    }
+}
