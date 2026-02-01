@@ -1,4 +1,4 @@
-name: CI Image
+name: CI Container Image
 
 on:
   workflow_dispatch:
