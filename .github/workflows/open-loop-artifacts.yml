@@ -8,6 +8,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: write
+
 jobs:
   open-loop:
     runs-on: ubuntu-latest
@@ -23,19 +26,30 @@ jobs:
           ffmpeg -y -i results/images/initial_state.svg results/images/initial_state.png
           ffmpeg -y -i results/images/final_state.svg results/images/final_state.png
           ffmpeg -y -i results/images/open_loop.mp4 -vf "fps=8,scale=640:-1:flags=lanczos" -t 6 results/images/open_loop_preview.gif
-      - name: Add preview to workflow summary
+      - name: Prepare GitHub Pages preview
         run: |
-          initial_b64="$(base64 -w 0 results/images/initial_state.png)"
-          final_b64="$(base64 -w 0 results/images/final_state.png)"
-          gif_b64="$(base64 -w 0 results/images/open_loop_preview.gif)"
+          preview_dir="results/pages/previews/pr-${{ github.event.pull_request.number }}"
+          mkdir -p "$preview_dir"
+          cp results/images/open_loop_preview.html "$preview_dir/index.html"
+          cp results/images/open_loop.mp4 "$preview_dir/"
+          cp results/images/initial_state.svg "$preview_dir/"
+          cp results/images/final_state.svg "$preview_dir/"
+          cp results/images/initial_state.png "$preview_dir/"
+          cp results/images/final_state.png "$preview_dir/"
+          cp results/images/open_loop_preview.gif "$preview_dir/"
+      - name: Publish preview to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: results/pages
+          keep_files: true
+      - name: Add preview link to workflow summary
+        run: |
+          preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}/"
           {
             echo "## Open-loop preview"
             echo ""
-            echo "![Initial state](data:image/png;base64,${initial_b64})"
-            echo "![Final state](data:image/png;base64,${final_b64})"
-            echo "![Open-loop animation](data:image/gif;base64,${gif_b64})"
-            echo ""
-            echo "HTML report included in artifacts: \`results/images/open_loop_preview.html\`"
+            echo "Preview URL: ${preview_url}"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload open-loop artifacts
         uses: actions/upload-artifact@v4

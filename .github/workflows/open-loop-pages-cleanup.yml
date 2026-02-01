@@ -1,0 +1,44 @@
+name: Open Loop Pages Cleanup
+
+on:
+  pull_request:
+    branches: ["master"]
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove preview from GitHub Pages
+        run: |
+          if ! git ls-remote --exit-code origin gh-pages >/dev/null 2>&1; then
+            echo "gh-pages branch not found; skipping cleanup."
+            exit 0
+          fi
+
+          git fetch origin gh-pages
+          git switch gh-pages
+
+          preview_dir="previews/pr-${{ github.event.pull_request.number }}"
+          if [ ! -d "$preview_dir" ]; then
+            echo "Preview directory not found; nothing to delete."
+            exit 0
+          fi
+
+          rm -rf "$preview_dir"
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes after cleanup; skipping commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Remove preview for PR #${{ github.event.pull_request.number }}"
+          git push origin gh-pages
