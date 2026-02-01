@@ -1,3 +1,4 @@
 /target
 *.svg
-!tests/fixtures/*.svg
+/results
+/tests/results
