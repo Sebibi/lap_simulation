@@ -5,7 +5,7 @@ use crate::tracks::circle::CircleTrack;
 use crate::plotting;
 use std::fs;
 
-pub fn open_loop(output_dir: &str) {
+pub fn open_loop(output_dir: &str, fps: u32) {
     // Create a circular track with center radius of 50m and 10m track width
     let circle_track = CircleTrack::new(50.0, 10.0, 100);
     println!("Track created: {}\n", circle_track);
@@ -38,9 +38,14 @@ pub fn open_loop(output_dir: &str) {
         eprintln!("Error plotting: {}", e);
     }
     let output_dir_ready = fs::create_dir_all(output_dir).is_ok();
+    let mut step_svgs: Vec<String> = Vec::new();
+    let mut initial_path: Option<String> = None;
     if output_dir_ready {
-        if let Err(e) = plotting::plot(&circle_track, &model, &format!("{}/{}", output_dir, initial_svg)) {
+        let initial_out = format!("{}/{}", output_dir, initial_svg);
+        if let Err(e) = plotting::plot(&circle_track, &model, &initial_out) {
             eprintln!("Error plotting: {}", e);
+        } else {
+            initial_path = Some(initial_out);
         }
     }
     
@@ -53,7 +58,9 @@ pub fn open_loop(output_dir: &str) {
 
         if output_dir_ready {
             let step_svg = format!("step_{:03}.svg", i);
-            if let Err(e) = plotting::plot(&circle_track, &model, &format!("{}/{}", output_dir, step_svg)) {
+            let step_path = format!("{}/{}", output_dir, step_svg);
+            step_svgs.push(step_path.clone());
+            if let Err(e) = plotting::plot(&circle_track, &model, &step_path) {
                 eprintln!("Error plotting: {}", e);
             }
         }
@@ -70,6 +77,16 @@ pub fn open_loop(output_dir: &str) {
         if let Err(e) = plotting::plot(&circle_track, &model, &format!("{}/{}", output_dir, final_svg)) {
             eprintln!("Error plotting: {}", e);
         }
+
+        if let Some(initial_svg) = initial_path {
+            let mut frames: Vec<String> = Vec::with_capacity(step_svgs.len() + 2);
+            frames.push(initial_svg);
+            frames.extend(step_svgs);
+            frames.push(format!("{}/{}", output_dir, final_svg));
+            let video_path = format!("{}/open_loop.mp4", output_dir);
+            if let Err(e) = plotting::create_video_from_svgs(&frames, video_path, fps) {
+                eprintln!("Error creating video: {}", e);
+            }
+        }
     }
 }
-
