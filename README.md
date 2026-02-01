@@ -63,3 +63,6 @@ Run tests:
 ```bash
 cargo test
 ```
+
+Note: `ffmpeg` must be installed and available on PATH to generate videos
+and to run the `open_loop` test.
