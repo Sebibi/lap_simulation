@@ -14,6 +14,7 @@ permissions:
   pages: write
   id-token: write
   issues: write
+  pull-requests: write
 
 concurrency:
   group: "pages"
@@ -57,7 +58,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Comment preview URL on PR
         uses: peter-evans/create-or-update-comment@v4
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
