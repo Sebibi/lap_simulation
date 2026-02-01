@@ -26,7 +26,7 @@
 
 ## Commit & Pull Request Guidelines
 - Commit messages are short and imperative (e.g., “Add duration parameter”, “Refactor rust conventions”). Optional prefixes like `ci:` appear in history.
-- PRs should include a clear summary of changes and testing performed (commands run).
+- PRs should include a verbose summary that explains what changed, why it changed, and which files were touched, plus the testing performed (commands run).
 - If a change affects outputs or artifacts (e.g., generated plots), mention the expected result or attach screenshots where relevant.
 - After opening a PR, check the status/logs of the **Rust** CI workflow. If it fails, analyze logs and attempt a fix. When the Rust CI succeeds, note it in conversation with a green checkmark (✅).
 

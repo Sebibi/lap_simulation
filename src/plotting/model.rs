@@ -98,7 +98,7 @@ mod tests {
         use std::f64::consts::PI;
 
         // Create a model at position (10, 20) with yaw = PI/4 (45 degrees)
-        let mut model = PointMass::with_initial_state(10.0, 20.0, 0.0, 0.0, PI / 4.0);
+        let mut model = PointMass::with_initial_state(10.0, 20.0, 0.0, PI / 4.0);
         model.set_size(5.0, 2.0);
 
         let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
