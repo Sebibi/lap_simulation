@@ -1,6 +1,9 @@
 use super::base_model::Model;
 use std::fmt;
 
+/// Minimum velocity magnitude threshold for yaw update
+const MIN_VELOCITY_THRESHOLD: f64 = 1e-10;
+
 /// State of a 2D point mass
 #[derive(Debug, Clone)]
 pub struct PointMassState {
@@ -108,7 +111,7 @@ impl Model for PointMass {
         
         // Update yaw to point in the direction of motion (world frame)
         // Only update if there is significant velocity to avoid numerical issues
-        if vx_world.abs() > 1e-10 || vy_world.abs() > 1e-10 {
+        if vx_world.abs() > MIN_VELOCITY_THRESHOLD || vy_world.abs() > MIN_VELOCITY_THRESHOLD {
             self.state.yaw = vy_world.atan2(vx_world);
         }
         
