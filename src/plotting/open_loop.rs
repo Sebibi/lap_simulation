@@ -6,6 +6,7 @@ use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug)]
 pub struct OpenLoopArtifacts {
     pub initial_svg: PathBuf,
     pub final_svg: PathBuf,
@@ -172,7 +173,9 @@ fn path_as_str(path: &Path) -> Result<&str, std::io::Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::scheduled_frame_times;
+    use super::{render_open_loop_outputs, scheduled_frame_times};
+    use crate::tracks::circle::CircleTrack;
+    use crate::models::point_mass::PointMassState;
 
     #[test]
     fn test_scheduled_frame_times_zero_duration() {
@@ -199,5 +202,48 @@ mod tests {
         let times = scheduled_frame_times(1.01, 10);
         assert_eq!(times.len(), 10);
         assert!((times[9] - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_render_open_loop_outputs_rejects_empty_states() {
+        let track = CircleTrack::new(50.0, 10.0, 100);
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+
+        let err = render_open_loop_outputs(
+            temp_dir.path(),
+            &track,
+            &[],
+            (4.5, 2.0),
+            0.1,
+            1.0,
+            10,
+        )
+        .expect_err("expected error for empty states");
+        assert!(err.to_string().contains("no states"));
+    }
+
+    #[test]
+    fn test_render_open_loop_outputs_rejects_zero_fps() {
+        let track = CircleTrack::new(50.0, 10.0, 100);
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let states = vec![PointMassState {
+            x: 0.0,
+            y: 0.0,
+            vx: 0.0,
+            vy: 0.0,
+            yaw: 0.0,
+        }];
+
+        let err = render_open_loop_outputs(
+            temp_dir.path(),
+            &track,
+            &states,
+            (4.5, 2.0),
+            0.1,
+            1.0,
+            0,
+        )
+        .expect_err("expected error for zero fps");
+        assert!(err.to_string().contains("fps"));
     }
 }

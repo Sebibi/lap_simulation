@@ -146,4 +146,17 @@ mod tests {
         assert!((y - start_pos.1).abs() < 1e-9);
         assert!((yaw - start_pos.2).abs() < 1e-9);
     }
+
+    #[test]
+    fn test_open_loop_clean_clears_state() {
+        let track = CircleTrack::new(50.0, 10.0, 100);
+        let model = PointMass::new();
+        let mut sim = OpenLoopSimulation::new();
+        sim.init(track, model);
+
+        sim.clean();
+
+        assert!(sim.track().is_none());
+        assert!(sim.model().is_none());
+    }
 }
