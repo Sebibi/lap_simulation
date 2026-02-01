@@ -1,9 +1,7 @@
 name: Open Loop Artifacts
 
 on:
-  pull_request:
-    branches: ["master"]
-    types: [opened, synchronize, reopened]
+  workflow_call:
   workflow_dispatch:
 
 env:
@@ -28,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/sebibi/lap_simulation-ci:ffmpeg
+    env:
+      PREVIEW_ID: ${{ github.event.pull_request.number || 'manual' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
         run: cargo run --bin lap_simulation
       - name: Prepare GitHub Pages preview
         run: |
-          preview_dir="results/pages/previews/pr-${{ github.event.pull_request.number }}"
+          preview_dir="results/pages/previews/pr-${{ env.PREVIEW_ID }}"
           mkdir -p "$preview_dir"
           cp results/images/open_loop_preview.html "$preview_dir/index.html"
           cp results/images/open_loop.mp4 "$preview_dir/"
@@ -50,7 +50,7 @@ jobs:
         uses: actions/deploy-pages@v4
       - name: Add preview link to workflow summary
         run: |
-          preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}/"
+          preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ env.PREVIEW_ID }}/"
           {
             echo "## Open-loop preview"
             echo ""
@@ -62,7 +62,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Open-loop preview: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}/
+            Open-loop preview: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ env.PREVIEW_ID }}/
       - name: Upload open-loop artifacts
         uses: actions/upload-artifact@v4
         with:
