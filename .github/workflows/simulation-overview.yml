@@ -1,4 +1,4 @@
-name: Open Loop Artifacts
+name: Simulation Overview
 
 on:
   workflow_call:
@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   open-loop:
+    name: Simulation Overview
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -31,11 +32,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Pages
+      - name: Configure Pages
         uses: actions/configure-pages@v5
-      - name: Run open-loop simulation
+      - name: Run simulation overview
         run: cargo run --bin lap_simulation
-      - name: Prepare GitHub Pages preview
+      - name: Prepare simulation overview preview
         run: |
           preview_dir="results/pages/previews/pr-${{ env.PREVIEW_ID }}"
           mkdir -p "$preview_dir"
@@ -52,7 +53,7 @@ jobs:
         run: |
           preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ env.PREVIEW_ID }}/"
           {
-            echo "## Open-loop preview"
+            echo "## Simulation overview preview"
             echo ""
             echo "Preview URL: ${preview_url}"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -62,10 +63,10 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Open-loop preview: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ env.PREVIEW_ID }}/
-      - name: Upload open-loop artifacts
+            Simulation overview: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ env.PREVIEW_ID }}/
+      - name: Upload simulation overview artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: open-loop-results
+          name: simulation-overview
           path: |
             results/images/open_loop.mp4
