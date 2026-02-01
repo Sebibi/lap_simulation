@@ -106,6 +106,12 @@ impl Model for PointMass {
         let vx_world = self.state.vx * cos_yaw - self.state.vy * sin_yaw;
         let vy_world = self.state.vx * sin_yaw + self.state.vy * cos_yaw;
         
+        // Update yaw to point in the direction of motion (world frame)
+        // Only update if there is significant velocity to avoid numerical issues
+        if vx_world.abs() > 1e-10 || vy_world.abs() > 1e-10 {
+            self.state.yaw = vy_world.atan2(vx_world);
+        }
+        
         // Update positions in world frame
         self.state.x += vx_world * dt;
         self.state.y += vy_world * dt;
@@ -353,5 +359,48 @@ mod tests {
         let (length, width) = model.get_size();
         assert_eq!(length, 5.0);
         assert_eq!(width, 2.5);
+    }
+
+    #[test]
+    fn test_point_mass_yaw_update() {
+        let mut model = PointMass::new();
+        model.set_controls(2.0, 0.0);
+
+        // After one step, vx=0.2, vy=0.0 (body frame)
+        // With initial yaw=0: vx_world=0.2, vy_world=0.0
+        // yaw should be atan2(0.0, 0.2) = 0.0 (pointing in +x direction)
+        model.step(0.1);
+        let state = model.get_state();
+        assert!((state.yaw - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_point_mass_yaw_update_with_lateral_velocity() {
+        use std::f64::consts::PI;
+
+        let mut model = PointMass::new();
+        model.set_controls(0.0, 2.0); // Lateral acceleration only
+
+        // After one step, vx=0.0, vy=0.2 (body frame)
+        // With initial yaw=0: vx_world=0.0, vy_world=0.2
+        // yaw should be atan2(0.2, 0.0) = PI/2 (pointing in +y direction)
+        model.step(0.1);
+        let state = model.get_state();
+        assert!((state.yaw - PI / 2.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_point_mass_yaw_update_diagonal() {
+        use std::f64::consts::PI;
+
+        let mut model = PointMass::new();
+        model.set_controls(1.0, 1.0); // Equal acceleration in both directions
+
+        // After one step, vx=0.1, vy=0.1 (body frame)
+        // With initial yaw=0: vx_world=0.1, vy_world=0.1
+        // yaw should be atan2(0.1, 0.1) = PI/4 (45 degrees)
+        model.step(0.1);
+        let state = model.get_state();
+        assert!((state.yaw - PI / 4.0).abs() < 1e-10);
     }
 }
