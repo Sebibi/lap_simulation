@@ -4,25 +4,68 @@ on:
   pull_request:
     branches: ["master"]
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   open-loop:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/sebibi/lap_simulation-ci:ffmpeg
 
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
       - name: Run open-loop simulation
         run: cargo run --bin lap_simulation
+      - name: Prepare GitHub Pages preview
+        run: |
+          preview_dir="results/pages/previews/pr-${{ github.event.pull_request.number }}"
+          mkdir -p "$preview_dir"
+          cp results/images/open_loop_preview.html "$preview_dir/index.html"
+          cp results/images/open_loop.mp4 "$preview_dir/"
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: results/pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Add preview link to workflow summary
+        run: |
+          preview_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}/"
+          {
+            echo "## Open-loop preview"
+            echo ""
+            echo "Preview URL: ${preview_url}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment preview URL on PR
+        uses: peter-evans/create-or-update-comment@v4
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Open-loop preview: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}/
       - name: Upload open-loop artifacts
         uses: actions/upload-artifact@v4
         with:
           name: open-loop-results
           path: |
-            results/images/initial_state.svg
-            results/images/final_state.svg
             results/images/open_loop.mp4
