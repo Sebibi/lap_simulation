@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open-loop preview</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 24px; }
+    .media { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    figure { margin: 0; }
+    img, video { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Open-loop simulation preview</h1>
+  <p>Video preview:</p>
+  <video controls src="open_loop.mp4"></video>
+  <h2>Key frames</h2>
+  <div class="media">
+    <figure>
+      <img src="final_state.svg" alt="Final state">
+      <figcaption>Final state</figcaption>
+    </figure>
+  </div>
+</body>
+</html>
