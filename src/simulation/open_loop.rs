@@ -5,6 +5,12 @@ use crate::tracks::circle::CircleTrack;
 use crate::plotting;
 use std::fs;
 
+/// Run the open-loop simulation.
+///
+/// Arguments:
+/// - output_dir: directory where SVG frames and the MP4 are written.
+/// - dt: simulation timestep in seconds (controls physics integration).
+/// - duration: total simulated time in seconds (controls how many frames are saved at 10 FPS).
 pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
     // Create a circular track with center radius of 50m and 10m track width
     let circle_track = CircleTrack::new(50.0, 10.0, 100);
