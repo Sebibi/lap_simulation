@@ -5,7 +5,7 @@ use crate::tracks::circle::CircleTrack;
 use crate::plotting;
 use std::fs;
 
-pub fn open_loop(output_dir: &str, fps: u32) {
+pub fn open_loop(output_dir: &str) {
     // Create a circular track with center radius of 50m and 10m track width
     let circle_track = CircleTrack::new(50.0, 10.0, 100);
     println!("Track created: {}\n", circle_track);
@@ -24,7 +24,8 @@ pub fn open_loop(output_dir: &str, fps: u32) {
     // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 0 m/s^2 in y)
     model.set_controls(2.0, 0.0);
     
-    let dt = 0.1; // Time step in seconds
+    let dt: f64 = 0.1; // Time step in seconds
+    let fps = (1.0f64 / dt).round().max(1.0) as u32;
     
     println!("Simulating point mass motion on circle track:\n");
     println!("Initial state:");
