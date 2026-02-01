@@ -1,9 +1,6 @@
 use super::base_model::Model;
 use std::fmt;
 
-/// Minimum velocity magnitude threshold for yaw update
-const MIN_VELOCITY_THRESHOLD: f64 = 1e-10;
-
 /// State of a 2D point mass
 #[derive(Debug, Clone)]
 pub struct PointMassState {
@@ -28,10 +25,10 @@ impl fmt::Display for PointMassState {
 pub struct PointMass {
     state: PointMassState,
     initial_state: PointMassState,
-    ax: f64,     // Body frame x-axis acceleration input
-    ay: f64,     // Body frame y-axis acceleration input
-    length: f64, // Vehicle length in meters
-    width: f64,  // Vehicle width in meters
+    ax: f64,         // Body frame x-axis acceleration input
+    yaw_rate: f64,   // Yaw rate input (rad/s)
+    length: f64,     // Vehicle length in meters
+    width: f64,      // Vehicle width in meters
 }
 
 impl PointMass {
@@ -49,7 +46,7 @@ impl PointMass {
             state: initial_state.clone(),
             initial_state,
             ax: 0.0,
-            ay: 0.0,
+            yaw_rate: 0.0,
             length: 4.5,  // Default car length
             width: 2.0,   // Default car width
         }
@@ -63,16 +60,16 @@ impl PointMass {
             state: initial_state.clone(),
             initial_state,
             ax: 0.0,
-            ay: 0.0,
+            yaw_rate: 0.0,
             length: 4.5,  // Default car length
             width: 2.0,   // Default car width
         }
     }
     
-    /// Set acceleration inputs
-    pub fn set_controls(&mut self, ax: f64, ay: f64) {
+    /// Set control inputs
+    pub fn set_controls(&mut self, ax: f64, yaw_rate: f64) {
         self.ax = ax;
-        self.ay = ay;
+        self.yaw_rate = yaw_rate;
     }
     
     /// Set the position
@@ -94,26 +91,26 @@ impl Model for PointMass {
     fn init(&mut self) {
         self.state = self.initial_state.clone();
         self.ax = 0.0;
-        self.ay = 0.0;
+        self.yaw_rate = 0.0;
     }
     
     fn step(&mut self, dt: f64) {
-        // Update velocities in body frame using acceleration inputs
-        self.state.vx += self.ax * dt;
-        self.state.vy += self.ay * dt;
+        // Update yaw using yaw_rate
+        self.state.yaw += self.yaw_rate * dt;
         
-        // Transform body frame velocities to world frame
+        // Update velocity in body frame using acceleration input
+        // vx is longitudinal velocity (in body frame)
+        self.state.vx += self.ax * dt;
+        // vy is always 0 for point mass (no slip condition)
+        self.state.vy = 0.0;
+        
+        // Transform body frame velocity to world frame
         let cos_yaw = self.state.yaw.cos();
         let sin_yaw = self.state.yaw.sin();
         
-        let vx_world = self.state.vx * cos_yaw - self.state.vy * sin_yaw;
-        let vy_world = self.state.vx * sin_yaw + self.state.vy * cos_yaw;
-        
-        // Update yaw to point in the direction of motion (world frame)
-        // Only update if there is significant velocity to avoid numerical issues
-        if vx_world.abs() > MIN_VELOCITY_THRESHOLD || vy_world.abs() > MIN_VELOCITY_THRESHOLD {
-            self.state.yaw = vy_world.atan2(vx_world);
-        }
+        // Vehicle moves in direction of yaw (body x-axis aligned with yaw)
+        let vx_world = self.state.vx * cos_yaw;
+        let vy_world = self.state.vx * sin_yaw;
         
         // Update positions in world frame
         self.state.x += vx_world * dt;
@@ -123,7 +120,7 @@ impl Model for PointMass {
     fn reset(&mut self) {
         self.state = self.initial_state.clone();
         self.ax = 0.0;
-        self.ay = 0.0;
+        self.yaw_rate = 0.0;
     }
     
     fn set_position(&mut self, x: f64, y: f64, yaw: f64) {
@@ -149,8 +146,8 @@ impl fmt::Display for PointMass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "PointMass {{ {}, Acceleration: ({:.3}, {:.3}) m/s² }}",
-            self.state, self.ax, self.ay
+            "PointMass {{ {}, Acceleration: {:.3} m/s², Yaw Rate: {:.3} rad/s }}",
+            self.state, self.ax, self.yaw_rate
         )
     }
 }
@@ -200,52 +197,53 @@ mod tests {
     #[test]
     fn test_point_mass_set_controls() {
         let mut model = PointMass::new();
-        model.set_controls(2.0, 3.0);
+        model.set_controls(2.0, 0.5);
 
-        // Acceleration should be stored internally
+        // After one step: vx should increase by ax*dt, vy should remain 0
         model.step(1.0);
         let state = model.get_state();
 
         assert_eq!(state.vx, 2.0);
-        assert_eq!(state.vy, 3.0);
+        assert_eq!(state.vy, 0.0);  // No slip - vy is always 0
+        assert_eq!(state.yaw, 0.5); // Yaw updated by yaw_rate * dt
     }
 
     #[test]
     fn test_point_mass_step_velocity() {
         let mut model = PointMass::new();
-        model.set_controls(2.0, 1.0);
+        model.set_controls(2.0, 0.0);  // ax=2.0, yaw_rate=0.0
 
         // After one step with dt=0.1
         // vx (body frame) should be 2.0 * 0.1 = 0.2
-        // vy (body frame) should be 1.0 * 0.1 = 0.1
+        // vy (body frame) should always be 0 (no slip)
         model.step(0.1);
         let state = model.get_state();
 
         assert!((state.vx - 0.2).abs() < 1e-10);
-        assert!((state.vy - 0.1).abs() < 1e-10);
+        assert_eq!(state.vy, 0.0);
     }
 
     #[test]
     fn test_point_mass_step_position() {
         let mut model = PointMass::new();
-        model.set_controls(2.0, 1.0);
+        model.set_controls(2.0, 0.0);  // ax=2.0, yaw_rate=0.0
 
         let dt = 0.1;
         model.step(dt);
 
-        // After first step: vx=0.2, vy=0.1, yaw=0
-        // With yaw=0: vx_world = 0.2, vy_world = 0.1
+        // After first step: vx=0.2, vy=0, yaw=0
+        // With yaw=0: vx_world = 0.2*cos(0) = 0.2, vy_world = 0.2*sin(0) = 0
         // x = 0 + 0.2 * 0.1 = 0.02
-        // y = 0 + 0.1 * 0.1 = 0.01
+        // y = 0 + 0 * 0.1 = 0.0
         let state = model.get_state();
         assert!((state.x - 0.02).abs() < 1e-10);
-        assert!((state.y - 0.01).abs() < 1e-10);
+        assert!(state.y.abs() < 1e-10);
     }
 
     #[test]
     fn test_point_mass_multiple_steps() {
         let mut model = PointMass::new();
-        model.set_controls(2.0, 1.0);
+        model.set_controls(2.0, 0.0);  // ax=2.0, yaw_rate=0.0
 
         let dt = 0.1;
         for _ in 0..10 {
@@ -256,15 +254,15 @@ mod tests {
 
         // After 10 steps:
         // vx should be 2.0 * 0.1 * 10 = 2.0
-        // vy should be 1.0 * 0.1 * 10 = 1.0
+        // vy should always be 0 (no slip)
         assert!((state.vx - 2.0).abs() < 1e-9);
-        assert!((state.vy - 1.0).abs() < 1e-9);
+        assert_eq!(state.vy, 0.0);
     }
 
     #[test]
     fn test_point_mass_reset() {
         let mut model = PointMass::with_initial_state(5.0, 10.0, 2.0, 3.0, 0.5);
-        model.set_controls(1.0, 2.0);
+        model.set_controls(1.0, 0.2);  // ax=1.0, yaw_rate=0.2
 
         model.step(0.1);
         model.reset();
@@ -301,22 +299,22 @@ mod tests {
     #[test]
     fn test_point_mass_kinematics() {
         let mut model = PointMass::new();
-        model.set_controls(4.0, 2.0);
+        model.set_controls(4.0, 0.0);  // ax=4.0, yaw_rate=0.0
 
         let dt = 0.5;
         model.step(dt);
 
         // vx (body) = 4.0 * 0.5 = 2.0
-        // vy (body) = 2.0 * 0.5 = 1.0
-        // With yaw=0: vx_world = 2.0, vy_world = 1.0
+        // vy (body) = 0 (no slip)
+        // With yaw=0: vx_world = 2.0*cos(0) = 2.0, vy_world = 2.0*sin(0) = 0
         // x = 0 + 2.0 * 0.5 = 1.0
-        // y = 0 + 1.0 * 0.5 = 0.5
+        // y = 0 + 0 * 0.5 = 0.0
         let state = model.get_state();
 
         assert!((state.vx - 2.0).abs() < 1e-10);
         assert!((state.x - 1.0).abs() < 1e-10);
-        assert!((state.vy - 1.0).abs() < 1e-10);
-        assert!((state.y - 0.5).abs() < 1e-10);
+        assert_eq!(state.vy, 0.0);
+        assert!(state.y.abs() < 1e-10);
     }
 
     #[test]
@@ -325,16 +323,16 @@ mod tests {
 
         // Test with yaw = PI/2 (90 degrees, pointing in +y direction)
         let mut model = PointMass::with_initial_state(0.0, 0.0, 0.0, 0.0, PI / 2.0);
-        model.set_controls(10.0, 0.0); // Accelerate forward in body frame
+        model.set_controls(10.0, 0.0); // Accelerate forward in body frame, no yaw_rate
 
         let dt = 0.1;
         model.step(dt);
 
         // vx (body) = 10.0 * 0.1 = 1.0
-        // vy (body) = 0.0
+        // vy (body) = 0 (no slip)
         // yaw = PI/2: cos(yaw) = 0, sin(yaw) = 1
-        // vx_world = 1.0 * 0 - 0.0 * 1 = 0.0
-        // vy_world = 1.0 * 1 + 0.0 * 0 = 1.0
+        // vx_world = 1.0 * 0 = 0.0
+        // vy_world = 1.0 * 1 = 1.0
         // x = 0 + 0.0 * 0.1 = 0.0
         // y = 0 + 1.0 * 0.1 = 0.1
         let state = model.get_state();
@@ -367,43 +365,43 @@ mod tests {
     #[test]
     fn test_point_mass_yaw_update() {
         let mut model = PointMass::new();
-        model.set_controls(2.0, 0.0);
+        model.set_controls(2.0, 0.5);  // ax=2.0, yaw_rate=0.5 rad/s
 
-        // After one step, vx=0.2, vy=0.0 (body frame)
-        // With initial yaw=0: vx_world=0.2, vy_world=0.0
-        // yaw should be atan2(0.0, 0.2) = 0.0 (pointing in +x direction)
+        // After one step dt=0.1: yaw should be 0.0 + 0.5*0.1 = 0.05
         model.step(0.1);
         let state = model.get_state();
-        assert!((state.yaw - 0.0).abs() < 1e-10);
+        assert!((state.yaw - 0.05).abs() < 1e-10);
     }
 
     #[test]
-    fn test_point_mass_yaw_update_with_lateral_velocity() {
+    fn test_point_mass_yaw_rate_control() {
         use std::f64::consts::PI;
 
         let mut model = PointMass::new();
-        model.set_controls(0.0, 2.0); // Lateral acceleration only
+        model.set_controls(0.0, PI);  // No acceleration, yaw_rate = PI rad/s (180 deg/s)
 
-        // After one step, vx=0.0, vy=0.2 (body frame)
-        // With initial yaw=0: vx_world=0.0, vy_world=0.2
-        // yaw should be atan2(0.2, 0.0) = PI/2 (pointing in +y direction)
-        model.step(0.1);
+        // After one second, yaw should rotate by PI radians
+        model.step(1.0);
         let state = model.get_state();
-        assert!((state.yaw - PI / 2.0).abs() < 1e-10);
+        assert!((state.yaw - PI).abs() < 1e-10);
     }
 
     #[test]
-    fn test_point_mass_yaw_update_diagonal() {
+    fn test_point_mass_combined_controls() {
         use std::f64::consts::PI;
 
         let mut model = PointMass::new();
-        model.set_controls(1.0, 1.0); // Equal acceleration in both directions
+        model.set_controls(2.0, PI / 2.0); // ax=2.0 m/s², yaw_rate=PI/2 rad/s
 
-        // After one step, vx=0.1, vy=0.1 (body frame)
-        // With initial yaw=0: vx_world=0.1, vy_world=0.1
-        // yaw should be atan2(0.1, 0.1) = PI/4 (45 degrees)
-        model.step(0.1);
+        let dt = 0.1;
+        model.step(dt);
+        
         let state = model.get_state();
-        assert!((state.yaw - PI / 4.0).abs() < 1e-10);
+        // vx should be 2.0 * 0.1 = 0.2 m/s
+        assert!((state.vx - 0.2).abs() < 1e-10);
+        // vy should always be 0 (no slip)
+        assert_eq!(state.vy, 0.0);
+        // yaw should be PI/2 * 0.1 = PI/20 rad
+        assert!((state.yaw - PI / 20.0).abs() < 1e-10);
     }
 }
