@@ -35,33 +35,7 @@ pub fn write_open_loop_html_preview<P: AsRef<Path>>(
         escape_html(video_filename)
     ));
 
-    let mut image_entries: Vec<(&str, &str)> = Vec::new();
-    if let Some(name) = initial_svg {
-        if output_dir.join(name).exists() {
-            image_entries.push(("Initial state", name));
-        }
-    }
-    if let Some(name) = final_svg {
-        if output_dir.join(name).exists() {
-            image_entries.push(("Final state", name));
-        }
-    }
-
-    if !image_entries.is_empty() {
-        html.push_str("  <h2>Key frames</h2>\n");
-        html.push_str("  <div class=\"media\">\n");
-        for (label, filename) in image_entries {
-            html.push_str("    <figure>\n");
-            html.push_str(&format!(
-                "      <img src=\"{}\" alt=\"{}\">\n",
-                escape_html(filename),
-                escape_html(label)
-            ));
-            html.push_str(&format!("      <figcaption>{}</figcaption>\n", escape_html(label)));
-            html.push_str("    </figure>\n");
-        }
-        html.push_str("  </div>\n");
-    }
+    let _ = (initial_svg, final_svg);
 
     html.push_str("</body>\n</html>\n");
 

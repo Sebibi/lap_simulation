@@ -33,22 +33,12 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Run open-loop simulation
         run: cargo run --bin lap_simulation
-      - name: Build preview assets
-        run: |
-          ffmpeg -y -i results/images/initial_state.svg results/images/initial_state.png
-          ffmpeg -y -i results/images/final_state.svg results/images/final_state.png
-          ffmpeg -y -i results/images/open_loop.mp4 -vf "fps=8,scale=640:-1:flags=lanczos" -t 6 results/images/open_loop_preview.gif
       - name: Prepare GitHub Pages preview
         run: |
           preview_dir="results/pages/previews/pr-${{ github.event.pull_request.number }}"
           mkdir -p "$preview_dir"
           cp results/images/open_loop_preview.html "$preview_dir/index.html"
           cp results/images/open_loop.mp4 "$preview_dir/"
-          cp results/images/initial_state.svg "$preview_dir/"
-          cp results/images/final_state.svg "$preview_dir/"
-          cp results/images/initial_state.png "$preview_dir/"
-          cp results/images/final_state.png "$preview_dir/"
-          cp results/images/open_loop_preview.gif "$preview_dir/"
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -69,10 +59,4 @@ jobs:
         with:
           name: open-loop-results
           path: |
-            results/images/initial_state.svg
-            results/images/final_state.svg
             results/images/open_loop.mp4
-            results/images/open_loop_preview.html
-            results/images/initial_state.png
-            results/images/final_state.png
-            results/images/open_loop_preview.gif
