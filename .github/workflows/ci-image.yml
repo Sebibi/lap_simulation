@@ -28,4 +28,4 @@ jobs:
           file: ci/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ toLower(github.repository_owner) }}/lap_simulation-ci:ffmpeg
+            ghcr.io/sebibi/lap_simulation-ci:ffmpeg
