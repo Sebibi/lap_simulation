@@ -1,0 +1,28 @@
+name: Open Loop Artifacts
+
+on:
+  pull_request:
+    branches: ["master"]
+    types: [opened, synchronize, reopened]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  open-loop:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/sebibi/lap_simulation-ci:ffmpeg
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run open-loop simulation
+        run: cargo run --bin lap_simulation
+      - name: Upload open-loop artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-loop-results
+          path: |
+            results/images/initial_state.svg
+            results/images/final_state.svg
+            results/images/open_loop.mp4
