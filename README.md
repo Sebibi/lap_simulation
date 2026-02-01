@@ -39,9 +39,13 @@ y_world = x_body * sin(yaw) + y_body * cos(yaw)
 
 ```
 src/
+├── bin/              # Binary entrypoints
+│   └── lap_simulation.rs
 ├── models/           # Vehicle dynamics models
 │   ├── base_model.rs # Model trait definition
 │   └── point_mass.rs # Point mass implementation
+├── simulation/       # Simulation entrypoints
+│   └── open_loop.rs
 ├── tracks/           # Track definitions
 │   ├── base_track.rs # Track trait definition
 │   ├── circle.rs     # Circular track
@@ -50,13 +54,16 @@ src/
     ├── track.rs      # Track plotting functions
     ├── model.rs      # Model plotting functions
     └── create.rs     # Combined plotting
+tests/
+├── common/           # Test helpers
+└── simulation/       # Integration tests
 ```
 
 ## Usage
 
 Run the simulation:
 ```bash
-cargo run
+cargo run --bin lap_simulation
 ```
 
 Run tests:
@@ -64,5 +71,9 @@ Run tests:
 cargo test
 ```
 
-Note: `ffmpeg` must be installed and available on PATH to generate videos
-and to run the `open_loop` test.
+Run the ffmpeg-gated integration test:
+```bash
+cargo test --features ffmpeg
+```
+
+Note: `ffmpeg` must be installed and available on PATH to generate videos and to run the `open_loop` integration test.

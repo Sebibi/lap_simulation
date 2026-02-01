@@ -98,3 +98,32 @@ fn write_concat_list<P: AsRef<Path>>(
     fs::write(list_path, contents)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::create_video_from_svgs;
+
+    #[test]
+    fn test_create_video_from_svgs_empty_frames() {
+        let err = create_video_from_svgs::<&str, &str>(&[], "out.mp4", 10)
+            .expect_err("expected error for empty frames");
+        assert!(err.to_string().contains("no SVG frames"));
+    }
+
+    #[test]
+    fn test_create_video_from_svgs_zero_fps() {
+        let err = create_video_from_svgs(&["frame.svg"], "out.mp4", 0)
+            .expect_err("expected error for fps=0");
+        assert!(err.to_string().contains("fps must be greater than zero"));
+    }
+
+    #[test]
+    fn test_create_video_from_svgs_missing_frame() {
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let output_path = temp_dir.path().join("out.mp4");
+        let missing_frame = temp_dir.path().join("missing.svg");
+        let err = create_video_from_svgs(&[missing_frame], &output_path, 10)
+            .expect_err("expected error for missing frame");
+        assert!(err.to_string().contains("missing SVG frame"));
+    }
+}
