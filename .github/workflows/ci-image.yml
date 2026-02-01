@@ -6,6 +6,10 @@ on:
     branches: [ "master" ]
     paths:
       - "ci/Dockerfile"
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "ci/Dockerfile"
 
 permissions:
   contents: read
