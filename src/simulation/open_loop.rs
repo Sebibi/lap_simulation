@@ -27,8 +27,8 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
     model.set_position(start_pos.0, start_pos.1, start_pos.2);
     println!("Model starting position: ({:.3}, {:.3}, {:.3})\n", start_pos.0, start_pos.1, start_pos.2);
     
-    // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 1 m/s^2 in y)
-    model.set_controls(2.0, 1.0);
+    // Set constant acceleration and yaw rate inputs (e.g., 2 m/s^2 forward, 0.2 rad/s)
+    model.set_controls(2.0, 0.2);
 
     let fps = 10u32;
     let frame_times = scheduled_frame_times(duration, fps);
