@@ -32,6 +32,11 @@ impl<M: Model, T: Track> OpenLoopSimulation<M, T> {
         self.model.as_ref()
     }
     
+    /// Get a mutable reference to the model
+    pub fn get_model_mut(&mut self) -> Option<&mut M> {
+        self.model.as_mut()
+    }
+    
     /// Get a reference to the track
     pub fn get_track(&self) -> Option<&T> {
         self.track.as_ref()
@@ -128,14 +133,16 @@ pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
     println!("Track created: {}\n", circle_track);
     
     // Create a point mass at origin with zero initial velocity
-    let mut model = PointMass::new();
-    
-    // Set constant acceleration and yaw rate inputs
-    model.set_controls(2.0, 0.4);
+    let model = PointMass::new();
     
     // Create and initialize simulation
     let mut sim = OpenLoopSimulation::new(dt, duration);
     sim.init(model, circle_track);
+    
+    // Set constant acceleration and yaw rate inputs after initialization
+    if let Some(model) = sim.get_model_mut() {
+        model.set_controls(2.0, 0.4);
+    }
     
     println!("Simulating point mass motion on circle track:\n");
     println!("Initial state:");
