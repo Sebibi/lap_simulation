@@ -76,4 +76,4 @@ Run the ffmpeg-gated integration test:
 cargo test --features ffmpeg
 ```
 
-Note: `ffmpeg` must be installed and available on PATH to generate videos and to run the `open_loop` integration test.
+Note: `ffmpeg` must be installed and available on PATH to generate videos and to run the `open_loop` integration test. (CI uses a container image with ffmpeg.)
