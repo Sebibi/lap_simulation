@@ -70,3 +70,6 @@ jobs:
           name: simulation-overview
           path: |
             results/images/open_loop.mp4
+            results/images/initial_state.svg
+            results/images/final_state.svg
+            results/images/open_loop_preview.html
