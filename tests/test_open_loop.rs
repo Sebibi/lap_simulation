@@ -27,7 +27,7 @@ fn test_open_loop_simulation_outputs_svgs() {
         .expect("failed to build output dir path");
 
     // Run the simulation and ensure it produces the expected SVG files.
-    open_loop(output_dir_str, 10);
+    open_loop(output_dir_str, 0.1, 3.0);
 
     let initial_svg = output_dir.join("initial_state.svg");
     let final_svg = output_dir.join("final_state.svg");

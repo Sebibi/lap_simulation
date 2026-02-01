@@ -5,7 +5,13 @@ use crate::tracks::circle::CircleTrack;
 use crate::plotting;
 use std::fs;
 
-pub fn open_loop(output_dir: &str, fps: u32) {
+/// Run the open-loop simulation.
+///
+/// Arguments:
+/// - output_dir: directory where SVG frames and the MP4 are written.
+/// - dt: simulation timestep in seconds (controls physics integration).
+/// - duration: total simulated time in seconds (controls how many frames are saved at 10 FPS).
+pub fn open_loop(output_dir: &str, dt: f64, duration: f64) {
     // Create a circular track with center radius of 50m and 10m track width
     let circle_track = CircleTrack::new(50.0, 10.0, 100);
     println!("Track created: {}\n", circle_track);
@@ -24,7 +30,8 @@ pub fn open_loop(output_dir: &str, fps: u32) {
     // Set constant acceleration inputs (e.g., 2 m/s^2 in x, 0 m/s^2 in y)
     model.set_controls(2.0, 0.0);
     
-    let dt = 0.1; // Time step in seconds
+    let fps = 10u32;
+    let frame_interval = 1.0f64 / fps as f64;
     
     println!("Simulating point mass motion on circle track:\n");
     println!("Initial state:");
@@ -45,19 +52,51 @@ pub fn open_loop(output_dir: &str, fps: u32) {
         }
     }
     
-    // Step 100 times and print state after each step
-    for i in 1..=30 {
+    let mut current_time = 0.0f64;
+    let mut next_frame_time = frame_interval;
+    let mut frame_index = 1usize;
+    let steps = (duration / dt).floor() as usize;
+
+    // Step through the simulation and capture frames at the target fps.
+    for i in 1..=steps {
         model.step(dt);
+        current_time += dt;
         let state = model.get_state();
         let in_track = circle_track.is_in_track(state.x, state.y);
         println!("Step {}: {} [in_track: {}]", i, state, in_track);
 
         if output_dir_ready {
-            let step_svg = format!("step_{:03}.svg", i);
-            let step_path = format!("{}/{}", output_dir, step_svg);
-            step_svgs.push(step_path.clone());
-            if let Err(e) = plotting::plot(&circle_track, &model, &step_path) {
-                eprintln!("Error plotting: {}", e);
+            while current_time + 1e-9 >= next_frame_time && next_frame_time + 1e-9 < duration {
+                let step_svg = format!("step_{:03}.svg", frame_index);
+                let step_path = format!("{}/{}", output_dir, step_svg);
+                step_svgs.push(step_path.clone());
+                if let Err(e) = plotting::plot(&circle_track, &model, &step_path) {
+                    eprintln!("Error plotting: {}", e);
+                }
+                frame_index += 1;
+                next_frame_time += frame_interval;
+            }
+        }
+    }
+
+    let remaining = duration - current_time;
+    if remaining > 0.0 {
+        model.step(remaining);
+        current_time += remaining;
+        let state = model.get_state();
+        let in_track = circle_track.is_in_track(state.x, state.y);
+        println!("Step {}: {} [in_track: {}]", steps + 1, state, in_track);
+
+        if output_dir_ready {
+            while current_time + 1e-9 >= next_frame_time && next_frame_time + 1e-9 < duration {
+                let step_svg = format!("step_{:03}.svg", frame_index);
+                let step_path = format!("{}/{}", output_dir, step_svg);
+                step_svgs.push(step_path.clone());
+                if let Err(e) = plotting::plot(&circle_track, &model, &step_path) {
+                    eprintln!("Error plotting: {}", e);
+                }
+                frame_index += 1;
+                next_frame_time += frame_interval;
             }
         }
     }
