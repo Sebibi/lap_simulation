@@ -1,39 +1,40 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `src/`: main Rust source. Entry points live in `src/bin/`, core logic in submodules like `models/`, `simulation/`, `tracks/`, and `plotting/`.
-- `tests/`: integration tests, with shared helpers under `tests/common/`.
+## Project Structure & Modules
+- `src/`: main Rust source; entry points in `src/bin/`, core logic in modules like `models/`, `simulation/`, `tracks/`, and `plotting/`.
+- `tests/`: integration tests; shared helpers in `tests/common/`.
 - `results/`: generated outputs (treat as artifacts, not source).
 - `.github/workflows/`: CI configuration.
 - `ci/`: container build assets for CI.
 
-## Build, Test, and Development Commands
-- `cargo build --verbose`: build the project with detailed output.
-- `cargo test --verbose`: run unit and integration tests.
+## Build, Test, and Run
+- `cargo build --verbose`: build with detailed output.
+- `cargo test --verbose`: run unit + integration tests.
 - `cargo run --bin lap_simulation`: run the main simulation binary.
 - `cargo test --features ffmpeg`: run tests that require `ffmpeg`.
 
-## Coding Style & Naming Conventions
+## Coding Style & Naming
 - Indentation: 4 spaces (Rust standard).
-- Prefer idiomatic Rust formatting via `cargo fmt` (run before PR if formatting changes).
-- Module/file names follow `snake_case` (e.g., `point_mass.rs`).
-- Types in `PascalCase`, functions/variables in `snake_case`.
+- Run `cargo fmt` when formatting changes.
+- Modules/files: `snake_case` (e.g., `point_mass.rs`).
+- Types: `PascalCase`; functions/variables: `snake_case`.
 
 ## Testing Guidelines
-- Framework: Rust’s built-in test harness (`#[test]`) plus integration tests in `tests/`.
-- Integration tests live under `tests/` and should have descriptive file names (e.g., `simulation/open_loop.rs`).
-- If adding tests that require external tools (like `ffmpeg`), gate them behind feature flags and document the usage.
+- Use Rust’s built-in test harness (`#[test]`) and integration tests under `tests/`.
+- Name integration tests descriptively (e.g., `simulation/open_loop.rs`).
+- Gate tests that require external tools (like `ffmpeg`) behind feature flags and document how to run them.
 
 ## Commit & Pull Request Guidelines
-- Commit messages are short and imperative (e.g., “Add duration parameter”, “Refactor rust conventions”). Optional prefixes like `ci:` appear in history.
-- PRs should include a verbose summary that explains what changed, why it changed, and which files were touched, plus the testing performed (commands run).
-- If a change affects outputs or artifacts (e.g., generated plots), mention the expected result or attach screenshots where relevant.
-- After opening a PR, check the status/logs of the **Rust** CI workflow. If it fails, analyze logs and attempt a fix. When the Rust CI succeeds, note it in conversation with a green checkmark (✅).
+- Commit messages: short, imperative (e.g., “Add duration parameter”, “Refactor rust conventions”); optional prefixes like `ci:` are acceptable.
+- PRs: include a verbose summary of what changed, why, and which files were touched; list test commands run.
+- If outputs/artifacts change (plots, media), mention the expected result or attach screenshots.
+- After opening a PR, check the **Tests and Integration** workflow. If it fails, inspect logs and attempt a fix. When it succeeds, note it in conversation with a green checkmark (✅).
 
 ## Issue Workflow
 - When working on a GitHub issue, do not commit directly to `master`.
 - Create a feature branch (e.g., `feature/issue-123-short-name`) and open a PR for review.
+- In the PR description, link the issue and include a closing keyword (e.g., “Fixes #123”) so the issue auto-resolves on merge.
 
 ## CI & Container Notes
 - CI runs Rust tests in a container image that includes `ffmpeg`.
-- The image build workflow only runs when `ci/Dockerfile` changes or via manual dispatch.
+- The image build workflow runs only when `ci/Dockerfile` changes or via manual dispatch.
