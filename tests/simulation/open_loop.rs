@@ -3,6 +3,7 @@ use lap_simulation::models::point_mass::PointMass;
 use lap_simulation::plotting::render_open_loop_outputs;
 use lap_simulation::simulation::base_simulation::Simulation;
 use lap_simulation::simulation::open_loop::OpenLoopSimulation;
+use lap_simulation::tracks::base_track::Track;
 use lap_simulation::tracks::circle::CircleTrack;
 use std::process::Command;
 
@@ -48,4 +49,36 @@ fn test_open_loop_simulation_outputs_svgs_and_video() {
     assert!(initial_svg.exists(), "missing initial_state.svg in output dir");
     assert!(final_svg.exists(), "missing final_state.svg in output dir");
     assert!(video_mp4.exists(), "missing open_loop.mp4 in output dir");
+}
+
+#[test]
+fn test_open_loop_simulation_returns_state_trajectory() {
+    let track = CircleTrack::new(50.0, 10.0, 100);
+    let start_pos = track.get_start_position();
+    let model = PointMass::new();
+    let mut simulation = OpenLoopSimulation::with_controls(0.0, 0.0);
+    simulation.init(track, model);
+
+    let dt = 0.2;
+    let duration = 0.5;
+    let states = simulation.run(dt, duration);
+
+    assert_eq!(states.len(), 4, "unexpected trajectory length");
+
+    for (index, state) in states.iter().enumerate() {
+        assert!(
+            (state.x - start_pos.0).abs() < 1e-9,
+            "state {index} has unexpected x"
+        );
+        assert!(
+            (state.y - start_pos.1).abs() < 1e-9,
+            "state {index} has unexpected y"
+        );
+        assert!(
+            (state.yaw - start_pos.2).abs() < 1e-9,
+            "state {index} has unexpected yaw"
+        );
+        assert!(state.vx.abs() < 1e-9, "state {index} has unexpected vx");
+        assert!(state.vy.abs() < 1e-9, "state {index} has unexpected vy");
+    }
 }
